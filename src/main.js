@@ -47,7 +47,6 @@ function onDocumentMouseDown(event) {
 
   cubes.children.forEach(function(cube){
     var intersects = raycaster.intersectObject(cube);
-    console.log(intersects.length);
     if(intersects.length > 0){
         if(event.button == 2){
             cubes.remove(cube);
@@ -76,7 +75,9 @@ function onDocumentMouseDown(event) {
 };
 
 function getNewMesh(x, y, z){
-    var newMesh = new THREE.Mesh(geometry, material);
+    var color = Math.random()*0xffffff;
+    var newMaterial = new THREE.MeshLambertMaterial({color: color})
+    var newMesh = new THREE.Mesh(geometry, newMaterial);
     newMesh.position.set(x, y, z);
     return newMesh;
 }
@@ -99,12 +100,8 @@ function onDocumentKeyDown(event) {
     }else if(keyCode == 38 || keyCode == 87){
         camera.zoom += zoom;
         camera.updateProjectionMatrix();
-    }else if(keyCode == 40 || keyCode == 83){
-        if(camera.zoom < 0){
-            camera.zoom = 1;
-        }else{
-            camera.zoom -= zoom;
-        }
+    }else if((keyCode == 40 || keyCode == 83) && camera.zoom - zoom > 0){
+        camera.zoom -= zoom;
         camera.updateProjectionMatrix();
     }
 };
