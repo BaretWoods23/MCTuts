@@ -1,8 +1,10 @@
-var renderer, camera, scene, controls, light, mesh, geometry, material
+var renderer, camera, scene, controls, light, cube, geometry, material
 var size = 16;
+var cubes = new THREE.Object3D();
 
 initialize();
 render();
+scene.add(cubes);
 
 function initialize(){
     renderer = new THREE.WebGLRenderer({canvas: document.getElementById('myCanvas'), antialias: true});
@@ -27,9 +29,9 @@ function initialize(){
 
     geometry = new THREE.BoxGeometry(size, size, size);
     material = new THREE.MeshLambertMaterial({color: 0xf3ff});
-    mesh = new THREE.Mesh(geometry, material);
+    cube = new THREE.Mesh(geometry, material);
 
-    scene.add(mesh);
+    cubes.add(cube);
 }
 
 function render(){
@@ -39,36 +41,39 @@ function render(){
 
 document.addEventListener('mousedown', onDocumentMouseDown, false);
 function onDocumentMouseDown(event) {
-  var vector = new THREE.Vector3((event.clientX/window.innerWidth) * 2 - 1, - (event.clientY/window.innerHeight) * 2 + 1, 0.5 );
+  var vector = new THREE.Vector3((event.clientX/window.innerWidth) * 2 - 1, - (event.clientY/window.innerHeight) * 2 + 1, 0.5);
   vector.unproject(camera);
-  var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+  var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
 
-  var intersects = raycaster.intersectObject(mesh);
-  if (intersects.length > 0){
-    if(event.button == 2){
-    scene.remove(mesh);
-    }else{
-      var index = Math.floor(intersects[0].faceIndex/2);
-      switch (index) {
-      case 0: 
-            scene.add(getNewMesh(mesh.position.x+size, 0, 0));
-            break;
-      case 1: 
-            scene.add(getNewMesh(mesh.position.x-size, 0, 0));
-            break;
-      case 2: 
-            scene.add(getNewMesh(0, mesh.position.y+size, 0));
-            break;
-      case 4: 
-            scene.add(getNewMesh(0, 0, mesh.position.z+size));
-            break;
-      case 5: 
-            scene.add(getNewMesh(0, 0, mesh.position.z-size));
-            break;
-      }
+  cubes.children.forEach(function(cube){
+    var intersects = raycaster.intersectObject(cube);
+    console.log(intersects.length);
+    if(intersects.length > 0){
+        if(event.button == 2){
+            cubes.remove(cube);
+        }else{
+        var index = Math.floor(intersects[0].faceIndex/2);
+        switch (index) {
+            case 0: 
+                    cubes.add(getNewMesh(cube.position.x+size, cube.position.y, cube.position.z));
+                    break;
+            case 1: 
+                    cubes.add(getNewMesh(cube.position.x-size, cube.position.y, cube.position.z));
+                    break;
+            case 2: 
+                    cubes.add(getNewMesh(cube.position.x, cube.position.y+size, cube.position.z));
+                    break;
+            case 4: 
+                    cubes.add(getNewMesh(cube.position.x, cube.position.y, cube.position.z+size));
+                    break;
+            case 5: 
+                    cubes.add(getNewMesh(cube.position.x, cube.position.y, cube.position.z-size));
+                    break;
+            }
+        }
     }
-  }
-}
+  });
+};
 
 function getNewMesh(x, y, z){
     var newMesh = new THREE.Mesh(geometry, material);
@@ -80,6 +85,7 @@ document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
     var keyCode = event.which;
     var theta = .785;
+    var zoom = 2;
     var x = camera.position.x;
     var z = camera.position.z;
     if (keyCode == 37 || keyCode == 65) {
@@ -91,10 +97,14 @@ function onDocumentKeyDown(event) {
         camera.position.z = z * Math.cos(theta) + x * Math.sin(theta);
         camera.lookAt(scene.position);
     }else if(keyCode == 38 || keyCode == 87){
-        camera.zoom += theta;
+        camera.zoom += zoom;
         camera.updateProjectionMatrix();
     }else if(keyCode == 40 || keyCode == 83){
-        camera.zoom -= theta;
+        if(camera.zoom < 0){
+            camera.zoom = 1;
+        }else{
+            camera.zoom -= zoom;
+        }
         camera.updateProjectionMatrix();
     }
 };
