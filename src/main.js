@@ -113,14 +113,19 @@ function onDocumentMouseDown(event) {
                  var index = Math.floor(intersects[0].faceIndex/2);
                 if(index==0 && !spaceIsOccupied(x+size, y, z)){
                     cubes.add(getNewMesh(x+size, y, z));
+                    break;
                 }else if(index==1 && !spaceIsOccupied(x-size, y, z)){
                     cubes.add(getNewMesh(x-size, y, z));
+                    break;
                 }else if(index==2 && !spaceIsOccupied(x, y+size, z)){
                     cubes.add(getNewMesh(x, y+size, z));
+                    break;
                 }else if(index==4 && !spaceIsOccupied(x, y, z+size)){
                     cubes.add(getNewMesh(x, y, z+size));
+                    break;
                 }else if(index==5 && !spaceIsOccupied(x, y, z-size)){
                     cubes.add(getNewMesh(x, y, z-size));
+                    break;
                 }
             }
         }
