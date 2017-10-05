@@ -70,16 +70,16 @@
 "use strict";
 
 
-var renderer, camera, scene, controls, cube, geometry, material;
+var renderer, camera, scene, cube, geometry, material;
 var size = 16;
 var cubes = new THREE.Object3D();
+var transparentCube;
 var boardWidth = 25;
 var boardLength = 25;
+var cubeOpacity = 0.5;
 
 initialize();
 render();
-//animate();
-scene.add(cubes);
 
 function initialize() {
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('myCanvas'), antialias: true });
@@ -90,7 +90,7 @@ function initialize() {
     camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 5000);
     camera.position.set(500, 500, 500);
 
-    controls = new THREE.TrackballControls(camera);
+    var controls = new THREE.TrackballControls(camera);
     controls.addEventListener('change', render);
 
     scene = new THREE.Scene();
@@ -111,6 +111,15 @@ function initialize() {
 
     createBoard();
     window.addEventListener('resize', onWindowResize, false);
+    document.addEventListener('mousemove', onmousemove, false);
+    document.addEventListener("keydown", onDocumentKeyDown, false);
+    document.addEventListener('mousedown', onDocumentMouseDown, false);
+    transparentCube = getNewMesh(0, 0, 0);
+    transparentCube.material.color.setHex(0xAAAAFF);
+    transparentCube.material.transparent = true;
+    transparentCube.material.opacity = cubeOpacity;
+    scene.add(cubes);
+    scene.add(transparentCube);
 }
 
 function createBoard() {
@@ -126,46 +135,6 @@ function render() {
     renderer.render(scene, camera);
 }
 
-// function animate(){
-//     requestAnimationFrame(animate);
-//     render();
-//     update();
-// }
-
-// function update(){
-//     var vector = new THREE.Vector3((event.clientX/window.innerWidth) * 2 - 1, - (event.clientY/window.innerHeight) * 2 + 1, 0.5);
-//     vector.unproject(camera);
-//     var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
-//     var length = cubes.children.length;
-//     for(var i = length-1; i >= 0; i--){
-//         var cube = cubes.children[i];
-//         var intersects = raycaster.intersectObject(cube);
-//         if(intersects.length > 0){
-//             var index = Math.floor(intersects[0].faceIndex/2);
-//             switch(index){
-//                 case 0: 
-//                     cube.material.color.setHex(0xC41E3A);
-//                     break;
-//                 case 1: 
-//                     cube.material.color.setHex(0xC41E3A);
-//                     break;
-//                 case 2: 
-//                     cube.material.color.setHex(0xC41E3A);
-//                     break;
-//                 case 4: 
-//                     cube.material.color.setHex(0xC41E3A);
-//                     break;
-//                 case 5: 
-//                     cube.material.color.setHex(0xC41E3A);
-//                     break;
-//             }
-//         }else{
-
-//         }
-//     }
-// };
-
-document.addEventListener('mousedown', onDocumentMouseDown, false);
 function onDocumentMouseDown(event) {
     var vector = new THREE.Vector3(event.clientX / window.innerWidth * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
     vector.unproject(camera);
@@ -180,7 +149,6 @@ function onDocumentMouseDown(event) {
         if (intersects.length > 0) {
             if (event.button == 2) {
                 cubes.remove(cube);
-                break;
             } else {
                 var index = Math.floor(intersects[0].faceIndex / 2);
                 if (index == 0 && !spaceIsOccupied(x + size, y, z)) {
@@ -220,7 +188,6 @@ function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    controls.handleResize();
 };
 
 function getNewMesh(x, y, z) {
@@ -231,20 +198,19 @@ function getNewMesh(x, y, z) {
     return newMesh;
 };
 
-document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
     var keyCode = event.which;
-    var theta = .785;
-    var zoom = 2;
+    var theta = .3; //.785
+    var zoom = 1;
     var x = camera.position.x;
     var z = camera.position.z;
     if (keyCode == 37 || keyCode == 65) {
-        camera.position.x = x * Math.cos(theta) + z * Math.sin(theta);
-        camera.position.z = z * Math.cos(theta) - x * Math.sin(theta);
-        camera.lookAt(scene.position);
-    } else if (keyCode == 39 || keyCode == 68) {
         camera.position.x = x * Math.cos(theta) - z * Math.sin(theta);
         camera.position.z = z * Math.cos(theta) + x * Math.sin(theta);
+        camera.lookAt(scene.position);
+    } else if (keyCode == 39 || keyCode == 68) {
+        camera.position.x = x * Math.cos(theta) + z * Math.sin(theta);
+        camera.position.z = z * Math.cos(theta) - x * Math.sin(theta);
         camera.lookAt(scene.position);
     } else if (keyCode == 38 || keyCode == 87 || keyCode == 187) {
         camera.zoom += zoom;
@@ -252,6 +218,52 @@ function onDocumentKeyDown(event) {
     } else if ((keyCode == 40 || keyCode == 83 || keyCode == 189) && camera.zoom - zoom > 0) {
         camera.zoom -= zoom;
         camera.updateProjectionMatrix();
+    }
+};
+
+function onmousemove(event) {
+    var vector = new THREE.Vector3(event.clientX / window.innerWidth * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+    vector.unproject(camera);
+    var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+    var length = cubes.children.length;
+    for (var i = length - 1; i >= 0; i--) {
+        var cube = cubes.children[i];
+        var x = cube.position.x;
+        var y = cube.position.y;
+        var z = cube.position.z;
+        var intersects = raycaster.intersectObject(cube);
+        if (intersects.length > 0) {
+            var index = Math.floor(intersects[0].faceIndex / 2);
+            transparentCube.material.opacity = cubeOpacity;
+            if (index == 0 && !spaceIsOccupied(x + size, y, z)) {
+                transparentCube.position.x = x + size;
+                transparentCube.position.y = y;
+                transparentCube.position.z = z;
+                break;
+            } else if (index == 1 && !spaceIsOccupied(x - size, y, z)) {
+                transparentCube.position.x = x - size;
+                transparentCube.position.y = y;
+                transparentCube.position.z = z;
+                break;
+            } else if (index == 2 && !spaceIsOccupied(x, y + size, z)) {
+                transparentCube.position.x = x;
+                transparentCube.position.y = y + size;
+                transparentCube.position.z = z;
+                break;
+            } else if (index == 4 && !spaceIsOccupied(x, y, z + size)) {
+                transparentCube.position.x = x;
+                transparentCube.position.y = y;
+                transparentCube.position.z = z + size;
+                break;
+            } else if (index == 5 && !spaceIsOccupied(x, y, z - size)) {
+                transparentCube.position.x = x;
+                transparentCube.position.y = y;
+                transparentCube.position.z = z - size;
+                break;
+            }
+        } else {
+            transparentCube.material.opacity = 0;
+        }
     }
 };
 
