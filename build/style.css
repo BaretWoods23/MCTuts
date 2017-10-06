@@ -19,8 +19,52 @@ body{
 
 .inventory{
     display: block;
-    height: 800;
-    width: 400;
-    right: 0;
+    height: 800px;
+    width: 300px;
+    float: left;
     background-color: black;
 }
+
+.column{
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: -ms-flex;
+    display: flex; 
+    flex-wrap: -webkit-wrap;
+    flex-wrap: -moz-wrap;
+    flex-wrap: -ms-wrap;
+    flex-wrap: nowrap;
+    flex-direction: -webkit-column;
+    flex-direction: -moz-column;
+    flex-direction: -ms-column;
+    flex-direction: column;
+}
+
+.row{
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: -ms-flex;
+    display: flex; 
+    flex-wrap: -webkit-wrap;
+    flex-wrap: -moz-wrap;
+    flex-wrap: -ms-wrap;
+    flex-wrap: nowrap;
+    flex-direction: -webkit-row;
+    flex-direction: -moz-row;
+    flex-direction: -ms-row;
+    flex-direction: row;  
+}
+
+.inventory-container{
+    margin: 20% auto;
+    width: 90%;
+}
+
+.texture{
+    background-color: grey;
+    height: 50px;
+    width: 50px;
+    padding: 2px;
+    margin: 5px;
+}
+

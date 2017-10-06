@@ -77,6 +77,9 @@ var transparentCube;
 var boardWidth = 25;
 var boardLength = 25;
 var cubeOpacity = 0.5;
+var canvWidth = 1000;
+var canvHeight = 800;
+var inventoryWidth = 300;
 
 initialize();
 render();
@@ -85,10 +88,10 @@ function initialize() {
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('myCanvas'), antialias: true });
     renderer.setClearColor(0x555555);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(canvWidth, canvHeight);
 
-    camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.set(500, 500, 500);
+    camera = new THREE.PerspectiveCamera(35, canvWidth / canvHeight, 0.1, 5000);
+    camera.position.set(800, 500, 500);
 
     var controls = new THREE.TrackballControls(camera);
     controls.addEventListener('change', render);
@@ -136,7 +139,7 @@ function render() {
 }
 
 function onDocumentMouseDown(event) {
-    var vector = new THREE.Vector3(event.clientX / window.innerWidth * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+    var vector = new THREE.Vector3((event.clientX - inventoryWidth) / canvWidth * 2 - 1, -(event.clientY / canvHeight) * 2 + 1, 0.5);
     vector.unproject(camera);
     var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
     var length = cubes.children.length;
@@ -149,7 +152,8 @@ function onDocumentMouseDown(event) {
         if (intersects.length > 0) {
             if (event.button == 2) {
                 cubes.remove(cube);
-            } else {
+                break;
+            } else if (event.button == 0) {
                 var index = Math.floor(intersects[0].faceIndex / 2);
                 if (index == 0 && !spaceIsOccupied(x + size, y, z)) {
                     cubes.add(getNewMesh(x + size, y, z));
@@ -185,9 +189,9 @@ function spaceIsOccupied(x, y, z) {
 };
 
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = canvWidth / canvHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(canvWidth, canvHeight);
 };
 
 function getNewMesh(x, y, z) {
@@ -222,7 +226,7 @@ function onDocumentKeyDown(event) {
 };
 
 function onmousemove(event) {
-    var vector = new THREE.Vector3(event.clientX / window.innerWidth * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+    var vector = new THREE.Vector3((event.clientX - inventoryWidth) / canvWidth * 2 - 1, -(event.clientY / canvHeight) * 2 + 1, 0.5);
     vector.unproject(camera);
     var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
     var length = cubes.children.length;

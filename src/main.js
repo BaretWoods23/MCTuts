@@ -7,6 +7,11 @@ var boardLength = 25;
 var cubeOpacity = 0.5;
 var canvWidth = 1000;
 var canvHeight = 800;
+var inventoryWidth = 300;
+var rotationActivated = false;
+var cursorX = 500;
+var cursorY = 500;
+var rotatingRight = false;
 
 initialize();
 render();
@@ -18,7 +23,7 @@ function initialize(){
     renderer.setSize(canvWidth, canvHeight);
 
     camera = new THREE.PerspectiveCamera(35, canvWidth / canvHeight, 0.1, 5000);
-    camera.position.set(500,500,500);
+    camera.position.set(800,500,500);
 
     var controls = new THREE.TrackballControls(camera);
     controls.addEventListener('change', render);
@@ -66,37 +71,46 @@ function render(){
 }
 
 function onDocumentMouseDown(event) {
-    var vector = new THREE.Vector3((event.clientX/canvWidth) * 2 - 1, - (event.clientY/canvHeight) * 2 + 1, 0.5);
+    var vector = new THREE.Vector3(((event.clientX-inventoryWidth)/canvWidth) * 2 - 1, - (event.clientY/canvHeight) * 2 + 1, 0.5);
     vector.unproject(camera);
     var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
     var length = cubes.children.length;
+    if(event.button == 1){
+        rotationActivated = !rotationActivated;
+        if(cursorX-inventoryWidth > canvWidth/2){
+            rotatingRight = true;
+        }else if(cursorX-inventoryWidth < canvWidth/2){
+            rotatingRight = false;
+        }
+    }else{
     for(var i = length-1; i >= 0; i--){
-        var cube = cubes.children[i];
-        var x = cube.position.x;
-        var y = cube.position.y;
-        var z = cube.position.z;
-        var intersects = raycaster.intersectObject(cube);
-        if(intersects.length > 0){
-            if(event.button == 2){
-                cubes.remove(cube);
-                break;
-            }else{
-                var index = Math.floor(intersects[0].faceIndex/2);
-                if(index==0 && !spaceIsOccupied(x+size, y, z)){
-                    cubes.add(getNewMesh(x+size, y, z));
+            var cube = cubes.children[i];
+            var x = cube.position.x;
+            var y = cube.position.y;
+            var z = cube.position.z;
+            var intersects = raycaster.intersectObject(cube);
+            if(intersects.length > 0){
+                if(event.button == 2){
+                    cubes.remove(cube);
                     break;
-                }else if(index==1 && !spaceIsOccupied(x-size, y, z)){
-                    cubes.add(getNewMesh(x-size, y, z));
-                    break;
-                }else if(index==2 && !spaceIsOccupied(x, y+size, z)){
-                    cubes.add(getNewMesh(x, y+size, z));
-                    break;
-                }else if(index==4 && !spaceIsOccupied(x, y, z+size)){
-                    cubes.add(getNewMesh(x, y, z+size));
-                    break;
-                }else if(index==5 && !spaceIsOccupied(x, y, z-size)){
-                    cubes.add(getNewMesh(x, y, z-size));
-                    break;
+                }else if(event.button == 0){
+                    var index = Math.floor(intersects[0].faceIndex/2);
+                    if(index==0 && !spaceIsOccupied(x+size, y, z)){
+                        cubes.add(getNewMesh(x+size, y, z));
+                        break;
+                    }else if(index==1 && !spaceIsOccupied(x-size, y, z)){
+                        cubes.add(getNewMesh(x-size, y, z));
+                        break;
+                    }else if(index==2 && !spaceIsOccupied(x, y+size, z)){
+                        cubes.add(getNewMesh(x, y+size, z));
+                        break;
+                    }else if(index==4 && !spaceIsOccupied(x, y, z+size)){
+                        cubes.add(getNewMesh(x, y, z+size));
+                        break;
+                    }else if(index==5 && !spaceIsOccupied(x, y, z-size)){
+                        cubes.add(getNewMesh(x, y, z-size));
+                        break;
+                    }
                 }
             }
         }
@@ -130,33 +144,39 @@ function getNewMesh(x, y, z){
 };
 
 function onDocumentKeyDown(event){
+    if(!rotationActivated){
     var keyCode = event.which;
-    var theta = .3; //.785
+    var theta = .05; //.785
     var zoom = 1;
     var x = camera.position.x;
     var z = camera.position.z;
+    var y = camera.position.y;
     if (keyCode == 37 || keyCode == 65) {
         camera.position.x = x * Math.cos(theta) - z * Math.sin(theta);
         camera.position.z = z * Math.cos(theta) + x * Math.sin(theta);
-        camera.lookAt(scene.position);
     }else if(keyCode == 39 || keyCode == 68) {
         camera.position.x = x * Math.cos(theta) + z * Math.sin(theta);
         camera.position.z = z * Math.cos(theta) - x * Math.sin(theta);
-        camera.lookAt(scene.position);
-    }else if(keyCode == 38 || keyCode == 87 || keyCode == 187){
+    }else if(keyCode == 38 || keyCode == 87) {
+        camera.position.y = y * Math.cos(theta) + (y * Math.sin(theta)/2);
+    }else if(keyCode == 40 || keyCode == 83) {
+        camera.position.y = y * Math.cos(theta) - (y * Math.sin(theta)/2);
+    }else if(keyCode == 187){
         camera.zoom += zoom;
-        camera.updateProjectionMatrix();
-    }else if((keyCode == 40 || keyCode == 83 || keyCode == 189) && camera.zoom - zoom > 0){
+    }else if(keyCode == 189 && camera.zoom - zoom > 0){
         camera.zoom -= zoom;
-        camera.updateProjectionMatrix();
+    }
+    camera.updateProjectionMatrix();
     }
 };
 
 function onmousemove(event){
-    var vector = new THREE.Vector3((event.clientX/canvWidth) * 2 - 1, - (event.clientY/canvHeight) * 2 + 1, 0.5);
+    var vector = new THREE.Vector3(((event.clientX-inventoryWidth)/canvWidth) * 2 - 1, - (event.clientY/canvHeight) * 2 + 1, 0.5);
     vector.unproject(camera);
     var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
     var length = cubes.children.length;
+    cursorX = event.clientX;
+    cursorY = event.clientY;
     for(var i = length-1; i >= 0; i--){
         var cube = cubes.children[i];
         var x = cube.position.x;
@@ -197,3 +217,24 @@ function onmousemove(event){
         }
     }
 };
+
+setInterval(function(){
+    if(rotationActivated){
+        updateRotation();
+    }
+}, 50);
+
+function updateRotation(){
+    var theta = 0.03;
+    var x = camera.position.x;
+    var z = camera.position.z;
+    if(rotatingRight){
+        camera.position.x = x * Math.cos(theta) + z * Math.sin(theta);  
+        camera.position.z = z * Math.cos(theta) - x * Math.sin(theta);
+        camera.lookAt(scene.position);
+    }else{
+        camera.position.x = x * Math.cos(theta) - z * Math.sin(theta);
+        camera.position.z = z * Math.cos(theta) + x * Math.sin(theta);
+        camera.lookAt(scene.position);
+    }
+}
