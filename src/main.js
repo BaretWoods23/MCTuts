@@ -33,14 +33,14 @@ function initialize(){
     var light1 = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(light1);
     var light2 = new THREE.DirectionalLight(0xffffff, .8);
-    light2.position.set(0, 1, 1);
+    light2.position.set(0, 1, 1).normalize;
     scene.add(light2);
-    var light3 = new THREE.DirectionalLight(0xffffff, .4);
-    light3.position.set(1, 0, 0);
-    scene.add(light3);
-    var light4 = new THREE.DirectionalLight(0xffffff, .4);
-    light4.position.set(0, 0, 1);
-    scene.add(light4);
+    // var light3 = new THREE.DirectionalLight(0xffffff, .4);
+    // light3.position.set(1, 0, 0);
+    // scene.add(light3);
+    // var light4 = new THREE.DirectionalLight(0xffffff, .4);
+    // light4.position.set(0, 0, 1);
+    // scene.add(light4);
 
     geometry = new THREE.BoxGeometry(size, size, size);
 
@@ -76,7 +76,7 @@ function onDocumentMouseDown(event) {
     var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
     var length = cubes.children.length;
     if(event.button == 1){
-        rotationActivated = !rotationActivated;
+        rotationActivated = true;
         if(cursorX-inventoryWidth > canvWidth/2){
             rotatingRight = true;
         }else if(cursorX-inventoryWidth < canvWidth/2){
@@ -165,9 +165,16 @@ function onDocumentKeyDown(event){
         camera.zoom += zoom;
     }else if(keyCode == 189 && camera.zoom - zoom > 0){
         camera.zoom -= zoom;
+    }else if(keyCode == 32){
+        camera.position.x = 1000;
+        camera.position.z = 1000;
     }
     camera.updateProjectionMatrix();
     }
+};
+
+document.onmouseup = function(){
+    rotationActivated = false;
 };
 
 function onmousemove(event){
@@ -225,7 +232,7 @@ setInterval(function(){
 }, 50);
 
 function updateRotation(){
-    var theta = 0.03;
+    var theta = 0.05;
     var x = camera.position.x;
     var z = camera.position.z;
     if(rotatingRight){
@@ -238,3 +245,12 @@ function updateRotation(){
         camera.lookAt(scene.position);
     }
 }
+
+window.onload = function(){
+    var textures = [texture1, texture2, texture3, texture4, texture5];
+    for(var i = 0; i < textures.length; i++){
+        textures[i].addEventListener("click", function(){
+            console.log(this.id);
+        });
+    };
+};
